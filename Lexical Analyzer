@@ -1,0 +1,138 @@
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+//including all necessary libraies
+#define MAX_TOKEN_LENGTH 100
+//defining max token length
+typedef enum {
+    TOKEN_KEYWORD,
+    TOKEN_IDENTIFIER,
+    TOKEN_OPERATOR,
+    TOKEN_INTEGER,
+    TOKEN_UNKNOWN
+} TokenType;
+/*
+enum keyword is used to define an enumeration,which is
+userdefined datatype.here enumeration (or enum) is a way 
+to assign names to integral constants, it makes the code more 
+readable and maintainable.Separately tokens' integral 
+constants are assigned
+*/
+typedef struct {
+    TokenType type;
+    char value[MAX_TOKEN_LENGTH];
+} Token;
+//Token is structure variable here
+//token types and structure
+//check if a character is a delimiter
+int isDelimiter(char ch) {
+    return isspace(ch) || ch == '+' || ch == '-' || ch == '*' || ch == '/' ||
+           ch == ',' || ch == ';' || ch == '>' || ch == '<' || ch == '=' ||
+           ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}';
+}
+// Check if a character is an operator
+int isOperator(char ch) {
+    return ch == '+' || ch == '-' || ch == '*' || ch == '/' ||
+           ch == '>' || ch == '<' || ch == '=';
+}
+// Check if a string is a keyword
+int isKeyword(const char* str) {
+    const char* keywords[] = {
+        "int", "float", "if", "else", "while", "do", "break", "continue", "double", "return", "char"
+    };
+    for (int i = 0; i < sizeof(keywords) / sizeof(keywords[0]); i++) {
+        if (strcmp(str, keywords[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+// Check if a string is an integer
+int isInteger(const char* str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (!isdigit(str[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+// Get the next token from the input string
+Token getNextToken(const char* str, int* index) {
+    Token token;
+    token.type = TOKEN_UNKNOWN;
+    int length = 0;
+    // Skip delimiters
+    while (str[*index] != '\0' && isDelimiter(str[*index])) {
+        (*index)++;
+    }
+    // Check for end of string
+    if (str[*index] == '\0') {
+        token.value[0] = '\0';
+        return token;
+    }
+    // Check for operators
+    if (isOperator(str[*index])) {
+        token.type = TOKEN_OPERATOR;
+        token.value[length++] = str[*index];
+        token.value[length] = '\0';
+        (*index)++;
+        return token;
+    }
+    // Extract token
+    while (str[*index] != '\0' && !isDelimiter(str[*index])) {
+        token.value[length++] = str[*index];
+        (*index)++;
+    }
+    token.value[length] = '\0';
+    // Determine token type using the above defined functions
+    if (isKeyword(token.value)) {
+        token.type = TOKEN_KEYWORD;
+    } else if (isInteger(token.value)) {
+        token.type = TOKEN_INTEGER;
+    } else {
+        token.type = TOKEN_IDENTIFIER;
+    }
+
+    return token;
+}
+// Perform lexical analysis
+void lexicalAnalyzer(const char* str) {
+    int index = 0;
+    Token token;
+    while (str[index] != '\0') {
+        token = getNextToken(str, &index);
+        if (token.value[0] != '\0') {
+            switch (token.type) {
+                case TOKEN_KEYWORD:
+                    printf("Token: Keyword, Value: %s\n", token.value);
+                    break;
+                case TOKEN_IDENTIFIER:
+                    printf("Token: Identifier, Value: %s\n", token.value);
+                    break;
+                case TOKEN_OPERATOR:
+                    printf("Token: Operator, Value: %s\n", token.value);
+                    break;
+                case TOKEN_INTEGER:
+                    printf("Token: Integer, Value: %s\n", token.value);
+                    break;
+                default:
+                    printf("Token: Unknown, Value: %s\n", token.value);
+                    break;
+            }
+        }
+    }
+}
+// Main function to implement the program
+int main() {
+    char *input = NULL;
+    size_t len = 0;
+    ssize_t read;
+    printf("Enter your code:\n");
+    // Read the entire input from the user
+    while ((read = getline(&input, &len, stdin)) != -1) {
+        lexicalAnalyzer(input);
+    }
+    free(input);
+    return 0;
+}
